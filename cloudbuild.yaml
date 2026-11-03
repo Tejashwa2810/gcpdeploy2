@@ -1,0 +1,44 @@
+steps:
+  # Step 1: Build the Spring Boot application
+  - name: 'maven:3.9-eclipse-temurin-21'
+    entrypoint: 'mvn'
+    args: ['clean', 'package', '-DskipTests']
+    id: 'build-jar'
+
+  # Step 2: Build the Docker image
+  - name: 'gcr.io/cloud-builders/docker'
+    args:
+      - 'build'
+      - '-t'
+      - 'asia-south1-docker.pkg.dev/$PROJECT_ID/springboot-repo/gcpdeploy2:$BUILD_ID'
+      - '.'
+    id: 'build-image'
+
+  # Step 3: Push the image to Artifact Registry
+  - name: 'gcr.io/cloud-builders/docker'
+    args:
+      - 'push'
+      - 'asia-south1-docker.pkg.dev/$PROJECT_ID/springboot-repo/gcpdeploy2:$BUILD_ID'
+    id: 'push-image'
+
+  # Step 4: Deploy the image to Cloud Run
+  - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
+    entrypoint: 'gcloud'
+    args:
+      - 'run'
+      - 'deploy'
+      - 'gcpdeploy2'
+      - '--image'
+      - 'asia-south1-docker.pkg.dev/$PROJECT_ID/springboot-repo/gcpdeploy2:$BUILD_ID'
+      - '--region'
+      - 'asia-south1'
+      - '--platform'
+      - 'managed'
+      - '--allow-unauthenticated'
+    id: 'deploy-cloud-run'
+
+images:
+  - 'asia-south1-docker.pkg.dev/$PROJECT_ID/springboot-repo/gcpdeploy2:$BUILD_ID'
+
+options:
+  logging: CLOUD_LOGGING_ONLY
