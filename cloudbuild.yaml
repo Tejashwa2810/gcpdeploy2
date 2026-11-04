@@ -35,6 +35,9 @@ steps:
       - '--platform'
       - 'managed'
       - '--allow-unauthenticated'
+      - '--no-traffic'       # NEW: Don't automatically send production traffic to this revision
+      - '--tag'
+      - 'candidate'          # NEW: Give this revision a testing URL
     id: 'deploy-cloud-run'
 
 images:
